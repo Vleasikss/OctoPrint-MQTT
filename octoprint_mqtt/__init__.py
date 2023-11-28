@@ -465,6 +465,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
                 self._mqtt.reconnect()
                 self._mqtt.loop_start()
                 self._logger.info(f"Reconnection attempt {attempt + 1}: successful")
+                time.sleep(wait_time)
                 break
             except Exception as e:
                 self._logger.error(f"Reconnection attempt {attempt + 1}: failed: {e}")
@@ -473,6 +474,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
 
         if not self._mqtt_connected:
             self._logger.error("Failed to reconnect after several attempts.")
+            self._attempt_reconnect()
 
     def _on_mqtt_disconnect(self, client, userdata, rc):
         if not client == self._mqtt:
