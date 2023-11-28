@@ -47,6 +47,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
     LWT_DISCONNECTED = "disconnected"
 
     def __init__(self):
+        self.reconnect_delay = 2
         self._mqtt = None
         self._mqtt_connected = False
         self._mqtt_reset_state = True
@@ -301,7 +302,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
         if self._mqtt is None:
             self._mqtt = mqtt.Client(client_id=client_id, protocol=protocol, clean_session=clean_session)
         else:
-            self._mqtt.reinitialise() #otherwise tls_set might be called again causing the plugin to crash 
+            self._mqtt.reinitialise() #otherwise tls_set might be called again causing the plugin to crash
 
         if broker_username is not None:
             self._mqtt.username_pw_set(broker_username, password=broker_password)
@@ -423,6 +424,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
             return
 
         self._logger.info("Connected to mqtt broker")
+        self.reconnect_delay = 2
         lw_active = self._settings.get_boolean(["publish", "lwActive"])
         lw_topic = self._get_topic("lw")
         _retain = self._settings.get_boolean(["broker", "retain"])
@@ -456,6 +458,9 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
 
         if not rc == 0:
             self._logger.error("Disconnected from mqtt broker for unknown reasons (network error?), rc = {}".format(rc))
+            time.sleep(min(self.reconnect_delay, 300))
+            self.reconnect_delay = min(self.reconnect_delay * 2, 300)
+            self.mqtt_connect()
         else:
             self._logger.info("Disconnected from mqtt broker")
 
