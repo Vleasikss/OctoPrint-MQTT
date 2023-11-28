@@ -460,6 +460,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
             self._logger.error("Disconnected from mqtt broker for unknown reasons (network error?), rc = {}".format(rc))
             time.sleep(min(self.reconnect_delay, 300))
             self.reconnect_delay = min(self.reconnect_delay * 2, 300)
+            self.mqtt_disconnect(force=True)
             self.mqtt_connect()
         else:
             self._logger.info("Disconnected from mqtt broker")
