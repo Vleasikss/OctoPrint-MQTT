@@ -20,28 +20,27 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
                  octoprint.plugin.TemplatePlugin,
                  octoprint.plugin.AssetPlugin,
                  octoprint.printer.PrinterCallback):
-
-    EVENT_CLASS_TO_EVENT_LIST = dict(server   = (Events.STARTUP, Events.SHUTDOWN, Events.CLIENT_OPENED,
-                                                 Events.CLIENT_CLOSED, Events.CONNECTIVITY_CHANGED),
-                                     comm     = (Events.CONNECTING, Events.CONNECTED, Events.DISCONNECTING,
-                                                 Events.DISCONNECTED, Events.ERROR, Events.PRINTER_STATE_CHANGED),
-                                     files    = (Events.UPLOAD, Events.FILE_ADDED, Events.FILE_REMOVED,
-                                                 Events.FOLDER_ADDED, Events.FOLDER_REMOVED, Events.UPDATED_FILES,
-                                                 Events.METADATA_ANALYSIS_STARTED, Events.METADATA_ANALYSIS_FINISHED,
-                                                 Events.FILE_SELECTED, Events.FILE_DESELECTED, Events.TRANSFER_STARTED,
-                                                 Events.TRANSFER_FAILED, Events.TRANSFER_DONE),
-                                     printjob = (Events.PRINT_STARTED, Events.PRINT_FAILED, Events.PRINT_DONE,
-                                                 Events.PRINT_CANCELLED, Events.PRINT_PAUSED, Events.PRINT_RESUMED),
-                                     gcode    = (Events.POWER_ON, Events.POWER_OFF, Events.HOME, Events.Z_CHANGE,
-                                                 Events.DWELL, Events.WAITING, Events.COOLING, Events.ALERT,
-                                                 Events.CONVEYOR, Events.EJECT, Events.E_STOP, Events.POSITION_UPDATE,
-                                                 Events.TOOL_CHANGE),
-                                     timelapse= (Events.CAPTURE_START, Events.CAPTURE_FAILED, Events.CAPTURE_DONE,
-                                                 Events.MOVIE_RENDERING, Events.MOVIE_FAILED, Events.MOVIE_FAILED),
-                                     slicing  = (Events.SLICING_STARTED, Events.SLICING_DONE, Events.SLICING_CANCELLED,
-                                                 Events.SLICING_FAILED, Events.SLICING_PROFILE_ADDED,
-                                                 Events.SLICING_PROFILE_DELETED, Events.SLICING_PROFILE_MODIFIED),
-                                     settings = (Events.SETTINGS_UPDATED,))
+    EVENT_CLASS_TO_EVENT_LIST = dict(server=(Events.STARTUP, Events.SHUTDOWN, Events.CLIENT_OPENED,
+                                             Events.CLIENT_CLOSED, Events.CONNECTIVITY_CHANGED),
+                                     comm=(Events.CONNECTING, Events.CONNECTED, Events.DISCONNECTING,
+                                           Events.DISCONNECTED, Events.ERROR, Events.PRINTER_STATE_CHANGED),
+                                     files=(Events.UPLOAD, Events.FILE_ADDED, Events.FILE_REMOVED,
+                                            Events.FOLDER_ADDED, Events.FOLDER_REMOVED, Events.UPDATED_FILES,
+                                            Events.METADATA_ANALYSIS_STARTED, Events.METADATA_ANALYSIS_FINISHED,
+                                            Events.FILE_SELECTED, Events.FILE_DESELECTED, Events.TRANSFER_STARTED,
+                                            Events.TRANSFER_FAILED, Events.TRANSFER_DONE),
+                                     printjob=(Events.PRINT_STARTED, Events.PRINT_FAILED, Events.PRINT_DONE,
+                                               Events.PRINT_CANCELLED, Events.PRINT_PAUSED, Events.PRINT_RESUMED),
+                                     gcode=(Events.POWER_ON, Events.POWER_OFF, Events.HOME, Events.Z_CHANGE,
+                                            Events.DWELL, Events.WAITING, Events.COOLING, Events.ALERT,
+                                            Events.CONVEYOR, Events.EJECT, Events.E_STOP, Events.POSITION_UPDATE,
+                                            Events.TOOL_CHANGE),
+                                     timelapse=(Events.CAPTURE_START, Events.CAPTURE_FAILED, Events.CAPTURE_DONE,
+                                                Events.MOVIE_RENDERING, Events.MOVIE_FAILED, Events.MOVIE_FAILED),
+                                     slicing=(Events.SLICING_STARTED, Events.SLICING_DONE, Events.SLICING_CANCELLED,
+                                              Events.SLICING_FAILED, Events.SLICING_PROFILE_ADDED,
+                                              Events.SLICING_PROFILE_DELETED, Events.SLICING_PROFILE_MODIFIED),
+                                     settings=(Events.SETTINGS_UPDATED,))
 
     LWT_CONNECTED = "connected"
     LWT_DISCONNECTED = "disconnected"
@@ -158,7 +157,9 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
                                               lw_topic=new_lw_topic))
         if len(broker_diff) or len(lw_diff) or len(client_diff):
             # something changed
-            self._logger.info("Settings changed (broker_diff={!r}, lw_diff={!r}), reconnecting to broker".format(broker_diff, lw_diff))
+            self._logger.info(
+                "Settings changed (broker_diff={!r}, lw_diff={!r}), reconnecting to broker".format(broker_diff,
+                                                                                                   lw_diff))
             self.mqtt_disconnect(force=True, incl_lwt=old_lw_active, lwt=old_lw_topic)
             self.mqtt_connect()
 
@@ -200,7 +201,8 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
 
             self.mqtt_publish_with_timestamp(topic.format(progress="printing"), data, retained=True)
 
-    def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
+    def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path,
+                            progress):
         topic = self._get_topic("progress")
 
         if topic:
@@ -302,7 +304,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
         if self._mqtt is None:
             self._mqtt = mqtt.Client(client_id=client_id, protocol=protocol, clean_session=clean_session)
         else:
-            self._mqtt.reinitialise() #otherwise tls_set might be called again causing the plugin to crash
+            self._mqtt.reinitialise()  # otherwise tls_set might be called again causing the plugin to crash
 
         if broker_username is not None:
             self._mqtt.username_pw_set(broker_username, password=broker_password)
@@ -388,7 +390,8 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
             self._mqtt.subscribe(topic)
 
     def mqtt_unsubscribe(self, callback, topic=None):
-        subbed_topics = [subbed_topic for subbed_topic, subbed_callback, _, _ in self._mqtt_subscriptions if callback == subbed_callback and (topic is None or topic == subbed_topic)]
+        subbed_topics = [subbed_topic for subbed_topic, subbed_callback, _, _ in self._mqtt_subscriptions if
+                         callback == subbed_callback and (topic is None or topic == subbed_topic)]
 
         def remove_sub(entry):
             subbed_topic, subbed_callback, _, _ = entry
@@ -452,18 +455,33 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
             self.on_slicing_progress("", "", "", "", "", 0)
             self._mqtt_reset_state = False
 
+    def _attempt_reconnect(self):
+        attempt = 0
+        wait_time = 10  # Wait time in seconds before each reconnection attempt
+
+        while not self._mqtt_connected:
+            try:
+                self._logger.info(f"Reconnection attempt {attempt + 1}: started")
+                self._mqtt.reconnect()
+                self._mqtt.loop_start()
+                self._logger.info(f"Reconnection attempt {attempt + 1}: successful")
+                break
+            except Exception as e:
+                self._logger.error(f"Reconnection attempt {attempt + 1}: failed: {e}")
+                time.sleep(wait_time)
+                attempt += 1
+
+        if not self._mqtt_connected:
+            self._logger.error("Failed to reconnect after several attempts.")
+
     def _on_mqtt_disconnect(self, client, userdata, rc):
         if not client == self._mqtt:
             return
 
         if not rc == 0:
-            self._logger.error("Disconnected from mqtt broker for unknown reasons (network error?), rc = {}".format(str(rc)))
-            self._logger.info("Next reconnect attempt in {} seconds".format(str(min(self.reconnect_delay, 300))))
-            time.sleep(min(self.reconnect_delay, 300))
-            self.reconnect_delay = min(self.reconnect_delay * 2, 300)
-            self._logger.info("Reconnecting to mqtt broker")
-            self._mqtt.reconnect()
-            self._logger.info("Reconnected to mqtt broker")
+            self._logger.error(
+                "Disconnected from mqtt broker for unknown reasons (network error?), rc = {}".format(str(rc)))
+            self._attempt_reconnect()
         else:
             self._logger.info("Disconnected from mqtt broker")
 
@@ -502,6 +520,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
 
 __plugin_name__ = "MQTT"
 __plugin_pythoncompat__ = ">=2.7,<4"
+
 
 def __plugin_load__():
     plugin = MqttPlugin()
