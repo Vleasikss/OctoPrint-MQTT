@@ -417,6 +417,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
                 "Connection to mqtt broker refused, bad username or password",
                 "Connection to mqtt broker refused, not authorised"
             ]
+            self._mqtt_connected = False
 
             if rc < len(reasons):
                 reason = reasons[rc]
@@ -457,19 +458,20 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
 
     def _attempt_reconnect(self):
         attempt = 0
-        wait_time = 10  # Wait time in seconds before each reconnection attempt
+        wait_time = 60  # Wait time in seconds before each reconnection attempt
 
         while not self._mqtt_connected:
             try:
                 self._logger.info(f"Reconnection attempt {attempt + 1}: started")
+                time.sleep(wait_time)
                 self._mqtt.reconnect()
                 self._mqtt.loop_start()
                 self._logger.info(f"Reconnection attempt {attempt + 1}: successful")
-                time.sleep(wait_time)
+                self._mqtt_connected = True
                 break
             except Exception as e:
                 self._logger.error(f"Reconnection attempt {attempt + 1}: failed: {e}")
-                time.sleep(wait_time)
+                self._mqtt_connected = False
                 attempt += 1
 
         if not self._mqtt_connected:
@@ -481,6 +483,7 @@ class MqttPlugin(octoprint.plugin.SettingsPlugin,
             return
 
         if not rc == 0:
+            self._mqtt_connected = False
             self._logger.error(
                 "Disconnected from mqtt broker for unknown reasons (network error?), rc = {}".format(str(rc)))
             self._attempt_reconnect()
